@@ -3,540 +3,806 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Diagrama de Infraestructura Eléctrica CPD</title>
-    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <title>Diagrama Eléctrico CPD</title>
     <style>
-        :root {
-            --color-primary: #3498db;
-            --color-secondary: #2c3e50;
-            --color-accent: #9b59b6;
-            --color-light: #ecf0f1;
-            --color-dark: #34495e;
-            --color-success: #2ecc71;
-            --color-warning: #f39c12;
-            --color-danger: #e74c3c;
-            --font-main: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
         body {
-            font-family: var(--font-main);
-            line-height: 1.6;
-            color: var(--color-dark);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
             background-color: #f8f9fa;
-            padding-bottom: 50px;
+            color: #333;
+            line-height: 1.6;
         }
 
         .container {
-            width: 100%;
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
-            padding: 0 15px;
         }
 
-        header {
-            background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
-            color: white;
-            padding: 2rem 0;
-            box-shadow: var(--shadow);
-            margin-bottom: 2rem;
-        }
-
-        header .container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+        .header {
             text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, #3498db, #2c3e50);
+            color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
 
-        h1 {
-            font-size: 2.5rem;
-            margin-bottom: 0.5rem;
+        .content-wrapper {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
         }
 
-        .subtitle {
-            font-size: 1.2rem;
-            opacity: 0.9;
-            max-width: 800px;
-        }
-
-        .diagram-container {
-            width: 100%;
-            margin: 2rem 0;
+        .diagram-box {
+            flex: 2;
+            min-width: 800px;
             background: white;
             border-radius: 8px;
-            box-shadow: var(--shadow);
-            overflow: auto;
-            padding: 1rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
         }
 
-        #diagram {
-            width: 100%;
-            min-height: 600px;
-            margin: 0 auto;
-            display: block;
-        }
-
-        .legend-container {
-            background-color: white;
+        .legend-box {
+            flex: 1;
+            min-width: 300px;
+            background: white;
             border-radius: 8px;
-            box-shadow: var(--shadow);
-            padding: 2rem;
-            margin-bottom: 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            max-height: 900px;
+            overflow-y: auto;
+        }
+
+        /* Visor de diagrama estilo PDF */
+        #diagram-container {
+            width: 100%;
+            height: 700px;
+            border: 1px solid #e0e0e0;
+            position: relative;
+            overflow: auto;
+            background-color: #f5f5f5;
+            cursor: grab;
+        }
+
+        #diagram-container:active {
+            cursor: grabbing;
+        }
+
+        #diagram-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-width: 100%;
+            min-height: 100%;
+            padding: 20px;
+            box-sizing: border-box;
+            transition: transform 0.1s ease;
+        }
+
+        #diagram-image {
+            max-width: none;
+            max-height: none;
+            border: 1px solid #ddd;
+            background: white;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            transition: all 0.2s ease;
+        }
+
+        .controls {
+            padding: 15px;
+            text-align: center;
+            background: #f1f1f1;
+            border-top: 1px solid #ddd;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.2s;
+            font-size: 14px;
+        }
+
+        .btn:hover {
+            background: #2980b9;
+        }
+
+        .btn.reset {
+            background: #e67e22;
+        }
+
+        .btn.reset:hover {
+            background: #d35400;
+        }
+
+        .zoom-info {
+            padding: 8px 15px;
+            background: #ecf0f1;
+            border-radius: 4px;
+            font-weight: bold;
+            color: #2c3e50;
+            font-size: 14px;
+            min-width: 80px;
+            text-align: center;
         }
 
         .legend-title {
-            font-size: 1.8rem;
-            color: var(--color-secondary);
-            margin-bottom: 1.5rem;
-            text-align: center;
-            border-bottom: 2px solid var(--color-light);
-            padding-bottom: 1rem;
+            padding: 15px;
+            background: #2c3e50;
+            color: white;
+            margin: 0;
+            position: sticky;
+            top: 0;
+            z-index: 10;
         }
 
         .legend-section {
-            margin-bottom: 2rem;
-        }
-
-        .legend-section:last-child {
-            margin-bottom: 0;
+            padding: 15px;
+            border-bottom: 1px solid #eee;
         }
 
         .section-title {
-            font-size: 1.4rem;
-            color: var(--color-primary);
-            margin-bottom: 1rem;
-            padding-bottom: 0.5rem;
-            border-bottom: 1px solid #e8e8e8;
+            color: #3498db;
+            margin-top: 0;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
         }
 
         .legend-item {
-            margin-bottom: 1.5rem;
             display: flex;
-            align-items: flex-start;
-            cursor: pointer;
+            align-items: center;
+            margin: 15px 0;
+            padding: 12px;
+            background: #f9f9f9;
+            border-radius: 6px;
             transition: all 0.2s;
-            padding: 0.5rem;
-            border-radius: 4px;
         }
 
         .legend-item:hover {
-            background-color: #f0f0f0;
+            background: #eef7ff;
+            transform: translateX(5px);
         }
 
-        .legend-icon {
+        .shape {
             width: 30px;
             height: 30px;
             margin-right: 15px;
             flex-shrink: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            border: 1px solid #ddd;
         }
 
         .legend-content {
-            flex-grow: 1;
+            flex: 1;
         }
 
         .legend-term {
             font-weight: bold;
-            color: var(--color-secondary);
-            font-size: 1.1rem;
-            margin-bottom: 0.25rem;
+            color: #2c3e50;
+            margin-bottom: 5px;
         }
 
         .legend-description {
             color: #555;
+            font-size: 0.95rem;
         }
 
-        /* Estilos para las formas de la leyenda */
-        .rect-blue {
-            width: 25px;
-            height: 25px;
-            background-color: rgba(135, 206, 250, 0.5);
-            border: 2px dashed #3498db;
+        /* Estilos para las formas específicas */
+        .blue-rect {
+            background: #e6f3ff;
+            border: 2px dashed #3498db !important;
         }
 
-        .cylinder {
-            width: 25px;
-            height: 25px;
-            background-color: #a29bfe;
+        .purple-cylinder {
+            background: #a29bfe;
             border-radius: 50%;
         }
 
-        .rect-small {
-            width: 25px;
-            height: 18px;
-            background-color: #fffffff;
-            border: 1px solid #333;
+        .green-box {
+            background: #a2dec0;
+            border: 1px solid #27ae60 !important;
         }
 
-        .rect-green {
-            width: 25px;
-            height: 18px;
-            background-color: #a2dec0;
-            border: 1px solid #27ae60;
+        .red-box {
+            background: #ffe6e6;
+            border: 2px solid #cc0000 !important;
         }
 
-        .rect-pdu {
-            width: 25px;
-            height: 18px;
-            background-color: #ffffff;
-            border-left: 4px solid #333;
-            border-right: 4px solid #333;
-            border-top: 1px solid #333;
-            border-bottom: 1px solid #333;
+        .blue-border {
+            border: 2px solid #3498db !important;
+            background: white;
         }
 
-        .rect-equipment {
-            width: 25px;
-            height: 18px;
-            background-color: #ffffff;
-            border: 1px solid #333;
+        .gray-box {
+            border: 1px solid #999 !important;
+            background: white;
         }
 
-        .rect-critical {
-            width: 25px;
-            height: 18px;
-            background-color: #ffffff;
-            border: 3px solid #3498db;
-        }
-
-        .line-thick {
-            width: 25px;
-            height: 4px;
-            background-color: #000;
-        }
-
-        .line-thin {
-            width: 25px;
+        .dashed-line {
+            background: repeating-linear-gradient(to right, #666, #666 5px, transparent 5px, transparent 10px);
             height: 2px;
-            background-color: #000;
         }
 
-        .line-dashed {
-            width: 25px;
+        .solid-line {
+            background: #666;
             height: 2px;
-            background-image: linear-gradient(to right, #000 50%, transparent 50%);
-            background-size: 8px 100%;
         }
 
-        .tabs {
-            display: flex;
-            margin-bottom: 1rem;
-            border-bottom: 1px solid #ddd;
+        .blue-line {
+            background: #3498db;
+            height: 2px;
         }
 
-        .tab {
-            padding: 0.75rem 1.5rem;
-            cursor: pointer;
-            background-color: #f1f1f1;
-            border: 1px solid #ddd;
-            border-bottom: none;
-            border-radius: 5px 5px 0 0;
-            margin-right: 5px;
-            transition: all 0.3s;
+        @media (max-width: 1000px) {
+            .content-wrapper {
+                flex-direction: column;
+            }
+
+            .diagram-box, .legend-box {
+                min-width: 100%;
+            }
+
+            #diagram-container {
+                height: 500px;
+            }
+
+            .controls {
+                flex-direction: column;
+                gap: 10px;
+            }
         }
 
-        .tab.active {
-            background-color: white;
-            border-bottom: 1px solid white;
-            margin-bottom: -1px;
-            color: var(--color-primary);
-            font-weight: bold;
-        }
-
-        .tab-content {
-            display: none;
-        }
-
-        .tab-content.active {
-            display: block;
-        }
-
-        .search-container {
-            margin-bottom: 1.5rem;
-        }
-
-        .search-box {
-            width: 100%;
-            padding: 0.75rem;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 1rem;
-        }
-
-        .highlight {
-            background-color: yellow;
-            padding: 2px;
-        }
-
-        /* Estilo para elementos resaltados */
-        .highlight-element {
-            filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.8));
-            transition: all 0.3s ease;
-        }
-
-        footer {
-            text-align: center;
-            padding: 2rem 0;
-            background-color: var(--color-secondary);
-            color: white;
-            margin-top: 3rem;
-        }
-
-        @media (max-width: 768px) {
-            h1 {
-                font-size: 2rem;
+        @media (max-width: 600px) {
+            #diagram-container {
+                height: 400px;
             }
 
             .legend-item {
                 flex-direction: column;
+                align-items: flex-start;
             }
 
-            .legend-icon {
+            .shape {
                 margin-bottom: 10px;
+                margin-right: 0;
+            }
+
+            .controls {
+                padding: 10px;
+            }
+
+            .btn {
+                padding: 8px 16px;
+                font-size: 12px;
             }
         }
     </style>
 </head>
 <body>
-    <header>
-        <div class="container">
-            <h1>Diagrama de Infraestructura Eléctrica y Disposición Física del CPD</h1>
-            <p class="subtitle">Una guía visual completa para comprender los componentes y conexiones del sistema eléctrico del Centro de Procesamiento de Datos</p>
-        </div>
-    </header>
-
     <div class="container">
-        <div class="diagram-container">
-            <div class="mermaid" id="diagram">
-                graph TD;
-                    %% === DISPOSICIÓN FÍSICA ===
-                    subgraph FISICO["Layout Físico del CPD"]
-                        direction TB
-                        
-                        subgraph Zona_Electrica["Zona Eléctrica (Norte)"]
-                            direction LR
-                            CGD_FIS[("CGD")]:::fisico
-                            UPS_A_FIS[("UPS A")]:::fisico
-                            UPS_B_FIS[("UPS B")]:::fisico
-                        end
-                        
-                        subgraph Hilera1["Hilera Oeste"]
-                            Rack1[["Rack 1\n(Crítico)"]]:::rack
-                            Rack2[["Rack 2\n(Servidor)"]]:::rack
-                        end
-                        
-                        subgraph Hilera2["Hilera Este"]
-                            Rack3[["Rack 3\n(Servidor)"]]:::rack
-                            Rack4[["Rack 4\n(Expansión)"]]:::rack
-                        end
-                        
-                        subgraph Zona_HVAC["Zona HVAC (Sur)"]
-                            HVAC_FIS[("Climatización")]:::fisico
-                        end
-                    end
-
-                    %% === INFRAESTRUCTURA ELÉCTRICA (SIN ATS) ===
-                    subgraph ELECTRICO["Infraestructura Eléctrica"]
-                        direction TB
-                        
-                        %% Acometidas y CGD
-                        Feed_A[("Acometida A\n400/230V")] --> CGD[["CGD"]]
-                        Feed_B[("Acometida B\n400/230V")] --> CGD
-                        
-                        %% UPS
-                        CGD -- "Int. Auto." --> UPS_A[["UPS A\n2200VA"]]
-                        CGD -- "Int. Auto." --> UPS_B[["UPS B\n2200VA"]]
-                        
-                        %% HVAC
-                        CGD -- "Int. Auto. HVAC" --> HVAC_Aire[["HVAC Aire\nDaikin 450W"]]
-                        CGD -- "Int. Auto. HVAC" --> HVAC_Liquido[["HVAC Líquido\nChilldyne 4.5-7.3kW"]]
-                        
-                        %% Rack 1 - Único con doble alimentación
-                        UPS_A --> PDU_A1[["PDU A1"]]
-                        UPS_B --> PDU_B1[["PDU B1"]]
-                        
-                        PDU_A1 -- "PSU1" --> R550[["Servidor R550\n300W (Doble PSU)"]]:::doble-alimentacion
-                        PDU_B1 -- "PSU2" --> R550
-                        
-                        %% Equipos de fuente única
-                        PDU_A1 --> Switch[["Switch Aruba\n445W (PSU Única)"]]:::simple-alimentacion
-                        PDU_B1 --> Router[["Router Principal\n100W (PSU Única)"]]:::simple-alimentacion
-                        PDU_A1 --> Sensores[["Sensores NetBotz\n10W"]]
-                        
-                        %% Rack 2
-                        UPS_A --> PDU_A2[["PDU A2"]]
-                        UPS_B --> PDU_B2[["PDU B2"]]
-                        PDU_A2 --> R250[["Servidor R250\n200W (PSU Única)"]]:::simple-alimentacion
-                        
-                        %% Rack 3
-                        UPS_A --> PDU_A3[["PDU A3"]]
-                        UPS_B --> PDU_B3[["PDU B3"]]
-                        PDU_B3 --> SR630[["Servidor SR630\n250W (PSU Única)"]]:::simple-alimentacion
-                        
-                        %% Rack 4
-                        UPS_A --> PDU_A4[["PDU A4"]]
-                        UPS_B --> PDU_B4[["PDU B4"]]
-                    end
-
-                    %% === CONEXIONES FÍSICO-ELÉCTRICO ===
-                    CGD -.- CGD_FIS
-                    UPS_A -.- UPS_A_FIS
-                    UPS_B -.- UPS_B_FIS
-                    HVAC_Aire -.- HVAC_FIS
-                    HVAC_Liquido -.- HVAC_FIS
-                    Rack1 -.- R550
-                    Rack1 -.- Switch
-                    Rack1 -.- Router
-                    Rack2 -.- R250
-                    Rack3 -.- SR630
-
-                    %% === ESTILOS ===
-                    classDef fisico fill:#e6f3ff,stroke:#333,stroke-width:2px
-                    classDef electrico fill:#fff,stroke:#666,stroke-width:1.5px
-                    classDef rack fill:#f8f8f8,stroke:#999,stroke-dasharray:3 3
-                    classDef critico fill:#ffe6e6,stroke:#cc0000
-                    classDef hvac fill:#e6ffe6,stroke:#009900
-                    classDef doble-alimentacion fill:#f0f0ff,stroke:#0000cc,stroke-width:2px
-                    classDef simple-alimentacion fill:#fff,stroke:#666
-                    
-                    class FISICO,Zona_Electrica,Hilera1,Hilera2,Zona_HVAC fisico
-                    class ELECTRICO,PDU_A1,PDU_B1,PDU_A2,PDU_B2,PDU_A3,PDU_B3,PDU_A4,PDU_B4 electrico
-                    class Rack1,Rack2,Rack3,Rack4 rack
-                    class R550,Switch,Router critico
-                    class HVAC_Aire,HVAC_Liquido hvac
-                    class R550 doble-alimentacion
-                    class Switch,Router,R250,SR630 simple-alimentacion
-            </div>
+        <div class="header">
+            <h1>Diagrama de Infraestructura Eléctrica del CPD</h1>
+            <p>Sistema redundante con doble alimentación y balanceo de carga</p>
         </div>
 
-        <div class="legend-container">
-            <h2 class="legend-title">Leyenda Detallada del Diagrama</h2>
+        <div class="content-wrapper">
+            <div class="diagram-box">
+                <div id="diagram-container">
+                    <div id="diagram-wrapper">
+                        <div id="diagram-image" style="width: 1200px; height: 800px; background: white; padding: 20px;">
+                            <pre class="mermaid" style="width: 100%; height: 100%;">
+                                graph TD;
+                                    %% === DISPOSICIÓN FÍSICA ===
+                                    subgraph FISICO["Layout Físico del CPD"]
+                                        direction TB
 
-            <div class="search-container">
-                <input type="text" class="search-box" placeholder="Buscar componentes, abreviaturas o términos..." id="searchInput">
-            </div>
+                                        subgraph Zona_Electrica["Zona Eléctrica (Norte)"]
+                                            CGD_FIS[("CGD")]:::fisico
+                                            UPS_A_FIS[("UPS A")]:::fisico
+                                            UPS_B_FIS[("UPS B")]:::fisico
+                                        end
 
-            <div class="tabs">
-                <div class="tab active" data-tab="zonas">Zonas Físicas</div>
-                <div class="tab" data-tab="componentes">Componentes Eléctricos</div>
-                <div class="tab" data-tab="conexiones">Conexiones</div>
-                <div class="tab" data-tab="abreviaturas">Abreviaturas</div>
-            </div>
+                                        subgraph Hilera1["Hilera Oeste"]
+                                            Rack1[["Rack 1\n(Crítico)"]]:::rack
+                                            Rack2[["Rack 2\n(Servidor)"]]:::rack
+                                        end
 
-            <!-- Contenido de las pestañas (se mantiene igual que en tu código original) -->
-            <!-- Solo incluyo una sección como ejemplo para no hacer el código demasiado largo -->
-            <div class="tab-content active" id="zonas">
-                <div class="legend-section">
-                    <h3 class="section-title">I. ZONAS FÍSICAS CONCEPTUALES</h3>
-                    <p class="section-description">Representación del layout físico del CPD (Sección Inferior del Diagrama)</p>
+                                        subgraph Hilera2["Hilera Este"]
+                                            Rack3[["Rack 3\n(Servidor)"]]:::rack
+                                            Rack4[["Rack 4\n(Expansión)"]]:::rack
+                                        end
 
-                    <div class="legend-item" data-highlight="Rack1">
-                        <div class="legend-icon">
-                            <div class="rect-blue"></div>
-                        </div>
-                        <div class="legend-content">
-                            <div class="legend-term">Rack 1 (Crítico)</div>
-                            <div class="legend-description">Armario físico que alberga el servidor Dell R550 y equipos de red críticos.</div>
+                                        subgraph Zona_HVAC["Zona HVAC (Sur)"]
+                                            HVAC_FIS[("Climatización")]:::fisico
+                                        end
+                                    end
+
+                                    %% === INFRAESTRUCTURA ELÉCTRICA (SIN ATS) ===
+                                    subgraph ELECTRICO["Infraestructura Eléctrica"]
+                                        direction TB
+
+                                        %% Acometidas y CGD el cilindro de acometida a y b y el cuadrado de cgd en morado,
+                                        Feed_A[("Acometida A\n400/230V")]:::purple --> CGD[["CGD"]]:::purple
+                                        Feed_B[("Acometida B\n400/230V")]:::purple --> CGD
+
+                                        %% UPS
+                                        CGD -- "Int. Auto." --> UPS_A[["UPS A\n2200VA"]]:::purple
+                                        CGD -- "Int. Auto." --> UPS_B[["UPS B\n2200VA"]]:::purple
+
+                                        %% HVAC
+                                        CGD -- "Int. Auto. HVAC" --> HVAC_Aire[["HVAC Aire\nDaikin 450W"]]
+                                        CGD -- "Int. Auto. HVAC" --> HVAC_Liquido[["HVAC Líquido\nChilldyne 4.5-7.3kW"]]
+
+                                        %% Rack 1 - Único con doble alimentación
+                                        UPS_A --> PDU_A1[["PDU A1"]]
+                                        UPS_B --> PDU_B1[["PDU B1"]]
+
+                                        PDU_A1 -- "PSU1" --> R550[["Servidor R550\n300W (Doble PSU)"]]:::doble-alimentacion
+                                        PDU_B1 -- "PSU2" --> R550
+
+                                        %% Equipos de fuente única
+                                        PDU_A1 --> Switch[["Switch Aruba\n445W (PSU Única)"]]:::simple-alimentacion
+                                        PDU_B1 --> Router[["Router Principal\n100W (PSU Única)"]]:::simple-alimentacion
+                                        PDU_A1 --> Sensores[["Sensores NetBotz\n10W"]]:::black-box
+
+                                        %% Rack 2
+                                        UPS_A --> PDU_A2[["PDU A2"]]
+                                        UPS_B --> PDU_B2[["PDU B2"]]
+                                        PDU_A2 --> R250[["Servidor R250\n200W (PSU Única)"]]:::simple-alimentacion
+
+                                        %% Rack 3
+                                        UPS_A --> PDU_A3[["PDU A3"]]
+                                        UPS_B --> PDU_B3[["PDU B3"]]
+                                        PDU_B3 --> SR630[["Servidor SR630\n250W (PSU Única)"]]:::simple-alimentacion
+
+                                        %% Rack 4
+                                        UPS_A --> PDU_A4[["PDU A4"]]
+                                        UPS_B --> PDU_B4[["PDU B4"]]
+                                    end
+
+                                    %% === CONEXIONES FÍSICO-ELÉCTRICO ===
+                                    CGD -.- CGD_FIS
+                                    UPS_A -.- UPS_A_FIS
+                                    UPS_B -.- UPS_B_FIS
+                                    HVAC_Aire -.- HVAC_FIS
+                                    HVAC_Liquido -.- HVAC_FIS
+                                    Rack1 -.- R550
+                                    Rack1 -.- Switch
+                                    Rack1 -.- Router
+                                    Rack2 -.- R250
+                                    Rack3 -.- SR630
+
+                                    %% === ESTILOS ===
+                                    classDef fisico fill:#e6f3ff,stroke:#333,stroke-width:2px
+                                    classDef electrico fill:#fff,stroke:#666,stroke-width:1.5px
+                                    classDef rack fill:#f8f8f8,stroke:#999,stroke-dasharray:3 3
+                                    classDef critico fill:#ffe6e6,stroke:#cc0000
+                                    classDef hvac fill:#e6ffe6,stroke:#009900
+                                    classDef doble-alimentacion fill:#f0f0ff,stroke:#0000cc,stroke-width:2px
+                                    classDef simple-alimentacion fill:#fff,stroke:#666
+                                    classDef purple fill:#e6e6ff,stroke:#800080,stroke-width:2px
+                                    classDef black-box fill:#000,stroke:#666,stroke-width:1.5px,color:#fff
+
+                                    class FISICO,Zona_Electrica,Hilera1,Hilera2,Zona_HVAC fisico
+                                    class ELECTRICO,PDU_A1,PDU_B1,PDU_A2,PDU_B2,PDU_A3,PDU_B3,PDU_A4,PDU_B4 electrico
+                                    class Rack1,Rack2,Rack3,Rack4 rack
+                                    class R550,Switch,Router critico
+                                    class HVAC_Aire,HVAC_Liquido hvac
+                                    class R550 doble-alimentacion
+                                    class Switch,Router,R250,SR630 simple-alimentacion
+
+                                    %% === Re-styling connections ===
+                                    linkStyle 8 stroke:blue,stroke-width:2px
+                                    linkStyle 9 stroke:blue,stroke-width:2px
+                            </pre>
                         </div>
                     </div>
-
-                    <div class="legend-item" data-highlight="R550">
-                        <div class="legend-icon">
-                            <div class="rect-critical"></div>
-                        </div>
-                        <div class="legend-content">
-                            <div class="legend-term">Servidor R550 (Doble PSU)</div>
-                            <div class="legend-description">Servidor crítico con doble fuente de alimentación para redundancia.</div>
-                        </div>
-                    </div>
-
-                    <!-- Más elementos de la leyenda... -->
+                </div>
+                <div class="controls">
+                    <button class="btn zoom-in">🔍+ Acercar</button>
+                    <div class="zoom-info" id="zoom-level">100%</div>
+                    <button class="btn zoom-out">🔍- Alejar</button>
+                    <button class="btn reset">🔄 Ajustar</button>
+                    <button class="btn" id="fullscreen-btn">📱 Pantalla completa</button>
                 </div>
             </div>
 
-            <!-- Otras pestañas... -->
+            <div class="legend-box">
+                <h2 class="legend-title">Leyenda Completa del Diagrama</h2>
+
+                <!-- Sección 1: Zonas Físicas -->
+                <div class="legend-section">
+                    <h3 class="section-title">1. Disposición Física del CPD</h3>
+
+                    <div class="legend-item">
+                        <div class="shape blue-rect"></div>
+                        <div class="legend-content">
+                            <div class="legend-term">Zona Eléctrica (Norte)</div>
+                            <div class="legend-description">Área donde se ubican los componentes principales de alimentación eléctrica: CGD, UPS A y UPS B.</div>
+                        </div>
+                    </div>
+
+                    <div class="legend-item">
+                        <div class="shape blue-rect"></div>
+                        <div class="legend-content">
+                            <div class="legend-term">Hilera Oeste</div>
+                            <div class="legend-description">Contiene los Racks 1 (Crítico) y 2 (Servidor) con los equipos principales.</div>
+                        </div>
+                    </div>
+
+                    <div class="legend-item">
+                        <div class="shape blue-rect"></div>
+                        <div class="legend-content">
+                            <div class="legend-term">Hilera Este</div>
+                            <div class="legend-description">Contiene los Racks 3 (Servidor) y 4 (Expansión) para equipos adicionales.</div>
+                        </div>
+                    </div>
+
+                    <div class="legend-item">
+                        <div class="shape blue-rect"></div>
+                        <div class="legend-content">
+                            <div class="legend-term">Zona HVAC (Sur)</div>
+                            <div class="legend-description">Área dedicada a los sistemas de climatización crítica para el CPD.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sección 2: Componentes Eléctricos -->
+                <div class="legend-section">
+                    <h3 class="section-title">2. Componentes del Sistema Eléctrico</h3>
+
+                    <div class="legend-item">
+                        <div class="shape purple-cylinder"></div>
+                        <div class="legend-content">
+                            <div class="legend-term">Acometidas A y B (400/230V)</div>
+                            <div class="legend-description">Entradas independientes de energía eléctrica desde la red pública para redundancia.</div>
+                        </div>
+                    </div>
+
+                    <div class="legend-item">
+                        <div class="shape purple-cylinder"></div>
+                        <div class="legend-content">
+                            <div class="legend-term">Cuadro General de Distribución (CGD)</div>
+                            <div class="legend-description">Centraliza y distribuye la energía a los diferentes sistemas.</div>
+                        </div>
+                    </div>
+
+                    <div class="legend-item">
+                        <div class="shape purple-cylinder"></div>
+                        <div class="legend-content">
+                            <div class="legend-term">UPS A y B (2200VA cada uno)</div>
+                            <div class="legend-description">Sistemas de Alimentación Ininterrumpida que proporcionan energía de respaldo durante cortes.</div>
+                        </div>
+                    </div>
+
+                    <div class="legend-item">
+                        <div class="shape gray-box"></div>
+                        <div class="legend-content">
+                            <div class="legend-term">PDUs (Unidades de Distribución)</div>
+                            <div class="legend-description">Regletas inteligentes que distribuyen energía a los equipos en cada rack.</div>
+                        </div>
+                    </div>
+
+                    <div class="legend-item">
+                        <div class="shape green-box"></div>
+                        <div class="legend-content">
+                            <div class="legend-term">Sistemas HVAC</div>
+                            <div class="legend-description">Climatización por aire (450W) y líquido (4.5-7.3kW) con alimentación directa desde el CGD.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sección 3: Equipos de TI -->
+                <div class="legend-section">
+                    <h3 class="section-title">3. Equipos de TI y su Alimentación</h3>
+
+                    <div class="legend-item">
+                        <div class="shape blue-border"></div>
+                        <div class="legend-content">
+                            <div class="legend-term">Servidor R550 (300W)</div>
+                            <div class="legend-description">Servidor crítico con doble fuente de alimentación (PSU1 en UPS A, PSU2 en UPS B).</div>
+                        </div>
+                    </div>
+
+                    <div class="legend-item">
+                        <div class="shape gray-box"></div>
+                        <div class="legend-content">
+                            <div class="legend-term">Switch Aruba (445W)</div>
+                            <div class="legend-description">Conmutador principal conectado a UPS A (PDU A1).</div>
+                        </div>
+                    </div>
+
+                    <div class="legend-item">
+                        <div class="shape gray-box"></div>
+                        <div class="legend-content">
+                            <div class="legend-term">Router Principal (100W)</div>
+                            <div class="legend-description">Enrutador conectado a UPS B (PDU B1) para balancear la carga.</div>
+                        </div>
+                    </div>
+
+                    <div class="legend-item">
+                        <div class="shape gray-box"></div>
+                        <div class="legend-content">
+                            <div class="legend-term">Servidor R250 (200W)</div>
+                            <div class="legend-description">Conectado a UPS A (PDU A2) en el Rack 2.</div>
+                        </div>
+                    </div>
+
+                    <div class="legend-item">
+                        <div class="shape gray-box"></div>
+                        <div class="legend-content">
+                            <div class="legend-term">Servidor SR630 (250W)</div>
+                            <div class="legend-description">Conectado a UPS B (PDU B3) en el Rack 3 para balanceo.</div>
+                        </div>
+                    </div>
+
+                    <div class="legend-item">
+                        <div class="shape" style="background: #000; border: 1px solid #000;"></div>
+                        <div class="legend-content">
+                            <div class="legend-term">Sensores NetBotz (10W)</div>
+                            <div class="legend-description">Sistema de monitorización conectado a UPS A (PDU A1).</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sección 4: Conexiones -->
+                <div class="legend-section">
+                    <h3 class="section-title">4. Tipos de Conexiones</h3>
+
+                    <div class="legend-item">
+                        <div class="shape solid-line"></div>
+                        <div class="legend-content">
+                            <div class="legend-term">Líneas sólidas</div>
+                            <div class="legend-description">Conexiones eléctricas principales entre componentes.</div>
+                        </div>
+                    </div>
+
+                    <div class="legend-item">
+                        <div class="shape blue-line"></div>
+                        <div class="legend-content">
+                            <div class="legend-term">Líneas azules</div>
+                            <div class="legend-description">Conexiones redundantes al servidor R550 desde ambas PDUs.</div>
+                        </div>
+                    </div>
+
+                    <div class="legend-item">
+                        <div class="shape dashed-line"></div>
+                        <div class="legend-content">
+                            <div class="legend-term">Líneas punteadas</div>
+                            <div class="legend-description">Relación entre componentes físicos y su representación eléctrica.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sección 5: Balanceo de Carga -->
+                <div class="legend-section">
+                    <h3 class="section-title">5. Balanceo de Carga entre UPS</h3>
+
+                    <div class="legend-item">
+                        <div class="shape" style="background: #e6f3ff; border: 1px solid #3498db; display: flex; align-items: center; justify-content: center; font-weight: bold; min-width: 60px; height: 30px; box-sizing: border-box;">UPS A</div>
+                        <div class="legend-content">
+                            <div class="legend-term">Carga Total: ~805W</div>
+                            <div class="legend-description">Servidor R550 (PSU1: 300W), Switch (445W), Sensores (10W), Servidor R250 (200W).</div>
+                        </div>
+                    </div>
+
+                    <div class="legend-item">
+                        <div class="shape" style="background: #e6f3ff; border: 1px solid #3498db; display: flex; align-items: center; justify-content: center; font-weight: bold; min-width: 60px; height: 30px; box-sizing: border-box;">UPS B</div>
+                        <div class="legend-content">
+                            <div class="legend-term">Carga Total: ~500W</div>
+                            <div class="legend-description">Servidor R550 (PSU2: 300W), Router (100W), Servidor SR630 (250W).</div>
+                        </div>
+                    </div>
+
+                    <div class="legend-item">
+                        <div class="shape" style="background: #e6ffe6; border: 1px solid #27ae60; display: flex; align-items: center; justify-content: center; font-weight: bold; min-width: 60px; height: 30px; box-sizing: border-box;">HVAC</div>
+                        <div class="legend-content">
+                            <div class="legend-term">Alimentación Directa</div>
+                            <div class="legend-description">Sistemas de climatización conectados directamente al CGD (Aire: 450W, Líquido: 4.5-7.3kW).</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
-    <footer>
-        <div class="container">
-            <p>© 2023 Diagrama de Infraestructura Eléctrica CPD - Proyecto Académico</p>
-        </div>
-    </footer>
-
+    <!-- Incluir Mermaid JS -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
     <script>
         // Inicializar Mermaid
         mermaid.initialize({
             startOnLoad: true,
             theme: 'default',
             flowchart: {
-                useMaxWidth: true,
+                useMaxWidth: false,
                 htmlLabels: true,
                 curve: 'basis'
             }
         });
 
-        // Funcionalidad de pestañas
-        document.querySelectorAll('.tab').forEach(tab => {
-            tab.addEventListener('click', () => {
-                // Remover clase active de todas las pestañas y contenidos
-                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-                
-                // Agregar clase active a la pestaña clickeada y su contenido
-                tab.classList.add('active');
-                const tabId = tab.getAttribute('data-tab');
-                document.getElementById(tabId).classList.add('active');
-            });
-        });
+        document.addEventListener('DOMContentLoaded', function() {
+            const container = document.getElementById('diagram-container');
+            const wrapper = document.getElementById('diagram-wrapper');
+            const zoomInfo = document.getElementById('zoom-level');
 
-        // Funcionalidad de búsqueda
-        document.getElementById('searchInput').addEventListener('input', function() {
-            const searchTerm = this.value.toLowerCase();
-            const legendItems = document.querySelectorAll('.legend-item');
-            
-            legendItems.forEach(item => {
-                const text = item.textContent.toLowerCase();
-                if (text.includes(searchTerm)) {
-                    item.style.display = 'flex';
-                    // Resaltar el texto coincidente
-                    const term = new RegExp(searchTerm, 'gi');
-                    item.innerHTML = item.innerHTML.replace(term, match => 
-                        `<span class="highlight">${match}</span>`);
-                } else {
-                    item.style.display = 'none';
+            let currentZoom = 1;
+            const minZoom = 0.25;
+            const maxZoom = 5;
+            const zoomStep = 0.25;
+
+            // Variables para arrastrar
+            let isDragging = false;
+            let startX, startY, scrollLeft, scrollTop;
+
+            function updateZoom() {
+                const percentage = Math.round(currentZoom * 100);
+                zoomInfo.textContent = percentage + '%';
+                wrapper.style.transform = `scale(${currentZoom})`;
+
+                // Ajustar el tamaño del wrapper para el scroll
+                const imageRect = wrapper.getBoundingClientRect();
+                wrapper.style.width = (1200 * currentZoom) + 'px';
+                wrapper.style.height = (800 * currentZoom) + 'px';
+            }
+
+            // Botones de zoom
+            document.querySelector('.zoom-in').addEventListener('click', function() {
+                if (currentZoom < maxZoom) {
+                    currentZoom = Math.min(maxZoom, currentZoom + zoomStep);
+                    updateZoom();
                 }
             });
-        });
 
-        // Funcionalidad de resaltado interactivo
-        document.querySelectorAll('.legend-item[data-highlight]').forEach(item => {
-            item.addEventListener('click', function() {
-                const elementId = this.getAttribute('data-highlight');
-                const svgElement = document.querySelector(`[id$='${elementId}']`);
-                
-                if (svgElement) {
-                    // Remover resaltado previo
-                    document.querySelectorAll('.highlight-element').forEach(el => {
-                        el.classList.remove('highlight-element');
-                    });
-                    
-                    // Aplicar resaltado
-                    svgElement.classList.add('highlight-element');
-                    
-                    // Desplazarse al elemento
-                    svgElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            document.querySelector('.zoom-out').addEventListener('click', function() {
+                if (currentZoom > minZoom) {
+                    currentZoom = Math.max(minZoom, currentZoom - zoomStep);
+                    updateZoom();
                 }
             });
+
+            document.querySelector('.reset').addEventListener('click', function() {
+                currentZoom = 1;
+                updateZoom();
+                container.scrollLeft = 0;
+                container.scrollTop = 0;
+            });
+
+            // Zoom con rueda del mouse
+            container.addEventListener('wheel', function(e) {
+                e.preventDefault();
+
+                const rect = container.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+
+                const scrollX = container.scrollLeft;
+                const scrollY = container.scrollTop;
+
+                const oldZoom = currentZoom;
+
+                if (e.deltaY < 0 && currentZoom < maxZoom) {
+                    currentZoom = Math.min(maxZoom, currentZoom + zoomStep);
+                } else if (e.deltaY > 0 && currentZoom > minZoom) {
+                    currentZoom = Math.max(minZoom, currentZoom - zoomStep);
+                }
+
+                if (oldZoom !== currentZoom) {
+                    updateZoom();
+
+                    // Ajustar el scroll para hacer zoom hacia el cursor
+                    const zoomRatio = currentZoom / oldZoom;
+                    container.scrollLeft = (scrollX + x) * zoomRatio - x;
+                    container.scrollTop = (scrollY + y) * zoomRatio - y;
+                }
+            });
+
+            // Funcionalidad de arrastrar
+            container.addEventListener('mousedown', function(e) {
+                isDragging = true;
+                container.style.cursor = 'grabbing';
+                startX = e.pageX - container.offsetLeft;
+                startY = e.pageY - container.offsetTop;
+                scrollLeft = container.scrollLeft;
+                scrollTop = container.scrollTop;
+                e.preventDefault();
+            });
+
+            container.addEventListener('mouseleave', function() {
+                isDragging = false;
+                container.style.cursor = 'grab';
+            });
+
+            container.addEventListener('mouseup', function() {
+                isDragging = false;
+                container.style.cursor = 'grab';
+            });
+
+            container.addEventListener('mousemove', function(e) {
+                if (!isDragging) return;
+                e.preventDefault();
+                const x = e.pageX - container.offsetLeft;
+                const y = e.pageY - container.offsetTop;
+                const walkX = (x - startX) * 2;
+                const walkY = (y - startY) * 2;
+                container.scrollLeft = scrollLeft - walkX;
+                container.scrollTop = scrollTop - walkY;
+            });
+
+            // Soporte táctil mejorado
+            let touchStartDistance = 0;
+            let touchStartScale = 1;
+
+            container.addEventListener('touchstart', function(e) {
+                if (e.touches.length === 2) {
+                    // Gesto de pellizco
+                    touchStartDistance = Math.hypot(
+                        e.touches[0].clientX - e.touches[1].clientX,
+                        e.touches[0].clientY - e.touches[1].clientY
+                    );
+                    touchStartScale = currentZoom;
+                } else if (e.touches.length === 1) {
+                    // Arrastrar
+                    const touch = e.touches[0];
+                    startX = touch.clientX;
+                    startY = touch.clientY;
+                    scrollLeft = container.scrollLeft;
+                    scrollTop = container.scrollTop;
+                    isDragging = true;
+                }
+            }, { passive: true });
+
+            container.addEventListener('touchmove', function(e) {
+                if (e.touches.length === 2) {
+                    // Zoom con pellizco
+                    const currentDistance = Math.hypot(
+                        e.touches[0].clientX - e.touches[1].clientX,
+                        e.touches[0].clientY - e.touches[1].clientY
+                    );
+
+                    const scale = (currentDistance / touchStartDistance) * touchStartScale;
+                    currentZoom = Math.max(minZoom, Math.min(maxZoom, scale));
+                    updateZoom();
+                    e.preventDefault();
+                } else if (e.touches.length === 1 && isDragging) {
+                    // Arrastrar
+                    const touch = e.touches[0];
+                    const walkX = startX - touch.clientX;
+                    const walkY = startY - touch.clientY;
+                    container.scrollLeft = scrollLeft + walkX;
+                    container.scrollTop = scrollTop + walkY;
+                    e.preventDefault();
+                }
+            }, { passive: false });
+
+            container.addEventListener('touchend', function() {
+                isDragging = false;
+                touchStartDistance = 0;
+            }, { passive: true });
+
+            // Pantalla completa
+            document.getElementById('fullscreen-btn').addEventListener('click', function() {
+                if (container.requestFullscreen) {
+                    container.requestFullscreen();
+                } else if (container.mozRequestFullScreen) {
+                    container.mozRequestFullScreen();
+                } else if (container.webkitRequestFullscreen) {
+                    container.webkitRequestFullscreen();
+                } else if (container.msRequestFullscreen) {
+                    container.msRequestFullscreen();
+                }
+            });
+
+            // Inicializar
+            updateZoom();
         });
     </script>
 </body>
